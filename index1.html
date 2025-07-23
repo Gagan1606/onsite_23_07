@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Angry Birds</title>
+</head>
+
+<body>
+    <canvas id="canvasId"></canvas>
+    <script>
+        const canvas = document.querySelector('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        // 1536
+        canvas.height = window.innerHeight;
+        // 695
+
+        let groundX = 0;
+        let groundY = canvas.height * 0.9;
+        let groundH = canvas.height * 0.1;
+        let groundW = canvas.width;
+        const radius = 20;
+        const boxSide = 20;
+        const velocity = 10;
+        const g = 0.5;
+
+        // let currentState = {
+        //     x: groundW * 0.25,
+        //     y: groundY,
+        //     score: 0,
+        //     velocityX: velocity * (Math.cos(Math.PI / 4)),
+        //     velocityY: velocity * (Math.sin(Math.PI / 4))
+        // }
+
+        // function applyGravity(object) {
+        //     setInterval(() => {
+        //         object.velocityY += g
+        //     }, 1000);
+        // }
+
+        // function drawMap() {
+        //     ctx.beginPath();
+        //     ctx.rect(groundX, groundY, groundW, groundH); //ground
+        //     ctx.fillStyle = "brown";
+        //     ctx.fill();
+
+        //     ctx.rect(groundX, groundY,)
+        // }
+
+        // function drawPlayer(x, y) {
+        //     ctx.beginPath();
+        //     ctx.arc(x, (y - radius), radius, 0, Math.PI * 2);
+        //     ctx.fillStyle = "blue";
+        //     ctx.fill();
+        // }
+
+        // function shoot() {
+        //     ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //     drawMap();
+        //     currentState.x += 10;
+        //     applyGravity(currentState);
+        //     drawPlayer(currentState.x, currentState.y);
+        //     requestAnimationFrame(shoot);
+        // }
+
+
+        // document.addEventListener('keydown', function (e) {
+        //     if (e.key == 'Enter') {
+        //         shoot();
+        //     }
+        // })
+        // drawPlayer(currentState.x, currentState.y);
+        // drawMap();
+
+
+
+        function isColliding(a, b) {
+            let dx = a.x - b.x, dy = a.y - b.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            return dist < 2 * radius;
+        }
+
+        let entityList = [];
+
+        class Entity {
+            constructor(name, x, y, vx, vy, mass = 1) {
+                this.name = name;
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.mass = mass;
+            }
+
+            entityHit() {
+                for (let entity of entityList) {
+                    if ((entity !== this) && (isColliding(this, entity))) {
+                        let m1 = this.mass, m2 = entity.mass;
+                        let u1 = this.vx, u2 = entity.vx;
+                        this.vx = (u1 * (m1 - m2) + 2 * m2 * u2) / (m1 + m2);
+                        entity.vx = (u2 * (m2 - m1) + 2 * m1 * u1) / (m1 + m2);
+                    }
+                }
+            }
+        }
+
+        function moveEntities() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawEntity('ground', ground.x, ground.y);
+
+
+            for (let entity of entityList) {
+                if (entity.name == 'ground') {
+                    continue;
+                };
+                entity.x += entity.vx;
+                entity.y += entity.vy;
+                entity.vy += g;
+                if (entity.y + radius >= groundY) {
+                    entity.y = groundY - radius;
+                    entity.vy = 0;
+                }
+                entity.entityHit();
+                drawEntity(entity.name, entity.x, entity.y);
+            }
+            requestAnimationFrame(moveEntities);
+        }
+
+        function drawEntity(name, x, y) {
+            if (name === 'ground') {
+                ctx.fillStyle = 'brown';
+                ctx.fillRect(x, y, groundW, groundH);
+                return;
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            if (name == 'player') {
+                ctx.fillStyle = "blue";
+            }
+            else {
+                ctx.fillStyle = "yellow";
+            }
+            ctx.fill();
+        }
+
+        const player = new Entity('player', groundW * 0.25, groundY - radius, 0, 0);
+        const enemy = new Entity('enemy', groundW * 0.75, groundY - radius, 0, 0);
+        const ground = new Entity('ground', groundX, groundY, 0, 0, Infinity);
+
+        entityList.push(player, enemy, ground);
+
+        drawEntity('player', player.x, player.y);
+        console.log('player is drawn');
+        drawEntity('enemy', enemy.x, enemy.y);
+        console.log('enemy is drawn');
+        drawEntity('ground', ground.x, ground.y);
+        console.log('ground is drawn');
+
+        moveEntities();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key == 'Enter') {
+                player.vx = velocity * (Math.cos(Math.PI / 4));
+                player.vy = -velocity * (Math.sin(Math.PI / 4));
+            }
+        })
+
+        
+    </script>
+
+</body>
+
+</html>
